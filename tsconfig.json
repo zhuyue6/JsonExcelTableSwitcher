@@ -1,0 +1,17 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "esModuleInterop": true
+  },
+  "include": [
+    "src/**/*"
+  ],
+  "files": [
+    "types.d.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
