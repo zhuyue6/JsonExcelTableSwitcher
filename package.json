@@ -1,5 +1,5 @@
 {
-  "name": "json-excel-switch",
+  "name": "json-excel-table-switcher",
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
@@ -9,7 +9,7 @@
   "author": "zhuyue",
   "license": "ISC",
   "type": "module",
-  "description": "json to excel, table",
+  "description": "json to table, excel to table, table to json, excel to json",
   "devDependencies": {
     "@vitejs/plugin-vue": "^5.1.4",
     "autoprefixer": "^10.4.20",
@@ -18,7 +18,9 @@
     "tailwindcss": "^3.4.12",
     "unplugin-auto-import": "^0.18.3",
     "unplugin-vue-components": "^0.27.4",
-    "vite": "^5.4.6"
+    "vite": "^5.4.6",
+    "vite-plugin-html": "^3.2.2",
+    "vite-plugin-singlefile": "^2.0.2"
   },
   "dependencies": {
     "element-plus": "^2.8.3",

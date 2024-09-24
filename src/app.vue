@@ -1,38 +1,27 @@
 <template>
   <div class="main-container flex flex-col items-center">
     <div 
-      class="w-[800px]"
+      class="min-w-[800px]"
     >
-    <div class="mb-2">
-      请选择功能：
-      <el-select
-        v-model="state.selected"
-        placeholder="请选择功能."
-        style="width: 240px"
-      >
-        <el-option 
-          label="JSON to Table"
-          value="1">
-        </el-option>
-        <el-option 
-          label="Excel to JSON"
-          value="2">
-        </el-option>
-      </el-select>
-    </div>
       <el-upload
-        v-if="state.selected === '2'"
-        class="upload-demo"
+        class="upload-demo mt-10 w-[400px] m-auto"
         :limit="1"
-        accept=".xlsx"
+        accept=".xlsx,.xls"
         :auto-upload="false"
-        @change="changeFile"
+        :on-change="changeFile"
       >
+      <template #tip>
+        <div class="el-upload__tip">
+          支持xlsx、xls类型文件
+        </div>
+      </template>
         <el-button type="primary">上传文件</el-button>
       </el-upload>
       <div class="flex items-center mb-6">
-        <div class="flex flex-grow mr-2">
+        <div class="flex flex-grow mr-2 items-center">
+          <div class="shrink-0 w-[120px] text-right">请输入内容：</div>
           <el-input
+            ref="inputRef"
             v-model="state.text"
             :rows="10"
             type="textarea"
@@ -41,7 +30,6 @@
         </div>
         <div class="flex flex-col">
           <el-button
-            v-if="state.selected === '1'"
             class="mb-2 "
             size="large"
             type="primary"
@@ -50,7 +38,6 @@
             json转换table
           </el-button>
           <el-button
-            v-if="state.selected === '2'"
             class="mb-2"
             size="large"
             type="primary"
@@ -58,7 +45,7 @@
             >
             table转换json
           </el-button>
-          <!-- <el-button
+          <el-button
             class="mb-2"
             size="large"
             type="primary"
@@ -73,31 +60,51 @@
             @click="copyTable"
             >
             复制表格内容
-          </el-button> -->
+          </el-button>
         </div>
       </div>
 
-      <el-select
-        v-model="state.selectedSheet"
-        placeholder="请选择sheet."
-        style="width: 240px"
-        class="mb-2"
-      >
-        <el-option
-          :key="sheet.value"
-          v-for="sheet of state.sheets"
-          :label="sheet.label"
-          :value="sheet.value"
-        >
-        </el-option>
-      </el-select>
+      <div class="flex flex-col">
+        <div class="flex items-center">
+          <div class="shrink-0 w-[120px] text-right">选择sheet：</div>
+          <el-select
+            v-model="state.selectedSheet"
+            placeholder="请选择sheet."
+            style="width: 240px"
+            @change="selectedSheet"
+            class="mb-2"
+          >
+            <el-option
+              :key="sheet.value"
+              v-for="sheet of state.sheets"
+              :label="sheet.label"
+              :value="sheet.value"
+            >
+            </el-option>
+          </el-select>
+        </div>
+
+        <div class="flex items-center mt-2 mb-2">
+          <div class="shrink-0 w-[120px] text-right">key列数：</div>
+          <el-input 
+            class="mr-2"
+            v-model="state.keyCol" 
+            placeholder="请输入数字，以哪列作为JSON key" />
+          <div class="shrink-0 w-[120px] text-right">value列数：</div>
+          <el-input
+            v-model="state.keyValue"
+            placeholder="请输入数字，以哪列作为JSON value"  />
+        </div>
+      </div>
       <el-table
         border
         :data="state.tableData"
+        class="bottom-table_display"
         stripe
       >
         <el-table-column
           :key="column.prop"
+          min-width="120"
           v-for="column of state.columns"
           :prop="column.prop"
           :label="column.label"
@@ -109,7 +116,7 @@
 
 <script setup lang="ts">
   import { reactive, ref, type Ref } from 'vue'
-  import { ElInput, UploadFile } from 'element-plus'
+  import { ElInput, UploadFile, ElMessage  } from 'element-plus'
   import { read, WorkSheet } from 'xlsx'
 
   interface State {
@@ -120,8 +127,17 @@
       label: string,
       prop: string
     }[]
+    keyCol: string,
+    keyValue: string
     selectedSheet: string,
-    sheets: WorkSheet[]
+    sheets: Sheet[]
+  }
+
+  interface Sheet {
+      label: string,
+      value: string,
+      data: Record<string, string>[],
+      keyMap: Record<string, string>
   }
 
   const state:State = reactive({
@@ -135,13 +151,15 @@
     selected: '1',
     text: '',
     tableData: [],
+    keyCol: '1',
+    keyValue: '2',
     selectedSheet: '',
     sheets: []
   })
   const inputRef: null | Ref<typeof ElInput> = ref(null)
 
   function getText() {
-    const text = (new Function(`return {${state.text}}`))();
+    const text = (new Function(`return {${state.text.replaceAll('，', ',').replaceAll('：', ':')}}`))();
     let parseText = null
     try {
       parseText = JSON.parse(JSON.stringify(text))
@@ -154,7 +172,6 @@
       return alert('请输入对象类型的字符串')
     }
 
-
     const list = []
     for (let [key, value] of Object.entries(text)) {
       list.push({
@@ -166,19 +183,45 @@
   }
 
   function textSwitchTable() {
+    state.columns = [{
+      label: '键值',
+      prop: 'key'
+    }, {
+      label: '键名',
+      prop: 'value'
+    }]
+    state.keyCol = '1'
+    state.keyValue = '2'
     const text = getText()
     patchTable(text)
   }
 
   function tableSwitchText() {
     const jsonStr: Record<string, string> = {}
-    let str = '';
-    for (let item of state.tableData) {
-      // jsonStr[item['key'] as string] = item['value']
-      str += `${item['key']}: ${item['value']}, \n` 
+    if (Number(state.keyCol) < 0 || Number(state.keyValue) < 0) {
+      return ElMessage({
+        message: '输入的col需要大于0',
+        type: 'warning',
+      })
     }
+    if (Number(state.keyCol) > state.columns.length || Number(state.keyValue) > state.columns.length) {
+       return ElMessage({
+        message: '输入的col不能大于表格的cols',
+        type: 'warning',
+      })
+    }
+    const list = state.tableData.map((item)=> {
+      const key = state.columns?.[Number(state.keyCol) - 1]['prop']
+      const value = state.columns?.[Number(state.keyValue) - 1]['prop']
+      return {
+        key: item[key] ?? '',
+        value: item[value] ?? ''
+      }
+    })
 
-    // const matchData = /^\{([^\{]+)}$/.exec(JSON.stringify(jsonStr))
+    let str = '';
+    list.forEach((item=> str += `"${item['key']}": "${item['value']}", \n` ))
+
     state.text = str
   }
   
@@ -196,17 +239,47 @@
 
     }
     const sheets = []
-    for (let [key, sheetValue] of Object.entries(workbookSheets)) {
-      const sheet = {
+    for (const [key, sheetValue] of Object.entries(workbookSheets)) {
+      const sheet: Sheet = {
         label: key,
         value: key,
-        data: []
+        data: [],
+        keyMap: {}
       }
+
+      // 先把列key获取到
       for (let [itemKey, itemValue] of Object.entries(sheetValue)) {
-        const number = /([0-9]+)$/.exec(itemKey)?.[0]
-        if (sheet[number]) {
-          sheet[number] = {
-            
+        const matched = /([A-z]+)([0-9]+)$/.exec(itemKey)
+        if (!matched) {
+          continue
+        }
+        const col = matched[1]
+        const number = matched[2]
+        if (Number(number) === 1) {
+          sheet.keyMap[col] = itemValue['v']
+        }
+      }
+
+      // 再遍历一次sheet值，把有key全部插入row
+      for (let [itemKey, itemValue] of Object.entries(sheetValue)) {
+        const matched = /([A-z]+)([0-9]+)$/.exec(itemKey)
+        if (!matched) {
+          continue
+        }
+        const col = matched[1]
+        const number = matched[2]
+        const colKey = sheet.keyMap[col]
+        if (Number(number) === 1) {
+          continue
+        }
+        if (sheet['data'][number]) {
+          sheet['data'][number] = {
+            ...sheet['data'][number],
+            [colKey]: itemValue['v']
+          }
+        } else {
+          sheet['data'][number] = {
+            [colKey]: itemValue['v']
           }
         }
       }
@@ -214,19 +287,52 @@
       sheets.push(sheet)
     }
     state.sheets = sheets
-    changeSheet(sheets[0]?.value)
+    changeSheet(sheets[0])
   }
 
-  function changeSheet(sheetName: string) {
-    state.selectedSheet = sheetName
+  function selectedSheet(sheetName: string) {
+    for (const sheet of state.sheets) {
+      if (sheet.value === sheetName) {
+        changeSheet(sheet)
+        break
+      }
+    }
+  }
+
+  function changeSheet(sheet: Sheet) {
+    state.selectedSheet = sheet.value
+    state.tableData = sheet.data
+    state.columns = Object.values(sheet.keyMap).map((key)=>({
+      label: key,
+      prop: key
+    }))
   }
 
   function copyInput() {
-
+    inputRef.value?.select()
+    document.execCommand('copy')
+    return ElMessage({
+      message: '复制成功',
+      type: 'success',
+    })
   }
 
   function copyTable() {
-    
+    const tableElement = document.querySelector('.el-table__body-wrapper')
+    const range = new Range()
+    // range.setStartBefore(tbodyElement.children[0]);
+    // // Range 结束位置在 li 3
+    // range.setEndAfter(tbodyElement.children?.at(-1));
+    range.selectNode(tableElement)
+    const selection = window.getSelection();
+    selection.removeAllRanges()
+    selection.addRange(range);
+    document.execCommand('copy')
+    // navigator.clipboard.writeText(cloneContents)
+    return ElMessage({
+      message: '复制成功',
+      type: 'success',
+    })
   }
 
 </script>
