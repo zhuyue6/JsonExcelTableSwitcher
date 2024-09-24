@@ -187,7 +187,7 @@
   const inputRef: null | Ref<typeof ElInput> = ref(null)
 
   onMounted(()=>{
-    const lang = localStorage.getItem('lang')
+    const lang = localStorage.getItem('lang') ?? 'en'
     selectLang(lang)
   })
 
