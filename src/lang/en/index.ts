@@ -1,0 +1,16 @@
+export default {
+  limitFiles: "Support xlsx and xls type files",
+  btnUploadfile: "upload",
+  btnJSON2Table: "JSON Conversion Table",
+  btnTable2JSON: "Convert Table to JSON",
+  btnCopyInput: "Copy input box content",
+  btnCopyTable: "Copy table content",
+  inputLabelTip: "Please enter the following content:",
+  inputTextTip: "Please enter a JSON or JS object string without the outermost parentheses {}, for example: aaa: 111",
+  selectLangTip: "please select language",
+  selectSheet: "Select sheet:",
+  selectColAsKey: "Select the number of columns as the key:",
+  selectColAsKeyTip: "Please enter a number, which column should be used as the JSON key",
+  selectColAsValue: "Select the number of columns as the value:",
+  selectColAsValueTip: "Please enter a number, which column should be used as the JSON value",
+}
