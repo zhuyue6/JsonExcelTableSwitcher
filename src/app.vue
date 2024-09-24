@@ -66,7 +66,7 @@
               :rows="10"
               type="textarea"
               class="mr-2"
-              :placeholder="t('inputTextTip')"
+              :placeholder="state.completion? t('inputTextTipSimple') : t('inputTextTip')"
             />
           </div>
           <div class="flex flex-col">
