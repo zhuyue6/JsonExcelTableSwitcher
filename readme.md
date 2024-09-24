@@ -1,5 +1,5 @@
 ### json-excel-table-switcher
-
+https://github.com/zhuyue6/JsonExcelTableSwitcher
 json to table, table to json, upload excel to json
 
 json table excel 转换
@@ -13,7 +13,7 @@ Converting to an Excel spreadsheet is very tedious and requires copying key valu
 
 ### how to use?
 
-open dist/index.html with a browser  or
-npm i && npm run dev to use dev server or
-view https://zhuyue6.github.io/JsonExcelTableSwitcher/dist/index.html
+open dist/index.html with a browser  or  
+npm i && npm run dev to use dev server or  
+view [https://zhuyue6.github.io/JsonExcelTableSwitcher/dist/index.html](https://zhuyue6.github.io/JsonExcelTableSwitcher/dist/index.html)
 
