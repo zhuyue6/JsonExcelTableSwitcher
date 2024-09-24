@@ -25,4 +25,5 @@ export default {
   messageCopySuccess: "Copy Success",
   messageInputColGreaterTableCols: "The input col cannot be greater than the cols in the table",
   messageInputGreater0: "The input col needs to be greater than 0",
+  messageInputTip: "Please check whether the input format and symbols are normal.",
 }

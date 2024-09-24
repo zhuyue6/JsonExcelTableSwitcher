@@ -224,7 +224,7 @@
   }
 
   function getText() {
-    const jsonStr = state.text.replaceAll('，', ',').replaceAll('：', ':').trim();
+    const jsonStr = state.text.trim();
     if (/^{[\s\S]*}$/.test(jsonStr) && state.completion) {
       ElMessage({
         message: t('messageCompleteRemove'),
@@ -241,11 +241,16 @@
       return
     }
     const result = state.completion ? `{${jsonStr}}` : jsonStr;
-    const text = (new Function(`return ${result}`))();
     let parseText = null
     try {
+      const text = (new Function(`return ${result}`))();
       parseText = JSON.parse(JSON.stringify(text))
-    } catch (e) {}
+    } catch (e) {
+      ElMessage({
+        message: t('messageInputTip'),
+        type: 'warning',
+      })
+    }
     return parseText
   }
 
@@ -279,7 +284,6 @@
   }
 
   function tableSwitchText() {
-    const jsonStr: Record<string, string> = {}
     if (Number(state.keyCol) <= 0 || Number(state.keyValue) <= 0) {
       return ElMessage({
         message: t('messageInputGreater0'),
@@ -350,7 +354,12 @@
         }
         const col = matched[1]
         const number = matched[2]
+        if (!sheet.keyMap[col]) {
+          sheet.keyMap[col] = `${col}-1-Empty`
+        }
+
         const colKey = sheet.keyMap[col]
+
         if (Number(number) === 1) {
           continue
         }
@@ -384,9 +393,17 @@
   function changeSheet(sheet: Sheet) {
     state.selectedSheet = sheet.value
     state.tableData = sheet.data
-    state.columns = Object.values(sheet.keyMap).map((key)=>({
-      label: key,
-      prop: key
+    const list = Object.entries(sheet.keyMap).sort(([key1], [key2]) => {
+      const matched1 = /[A-z]/.exec(key1)
+      const col1 = matched1[0]
+      const matched2 = /[A-z]/.exec(key2)
+      const col2 = matched2[0]
+      return col1 > col2 ? 1 : -2
+    })
+
+    state.columns = list.map(([key, value])=>({
+      label: value,
+      prop: value
     }))
   }
 

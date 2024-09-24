@@ -25,4 +25,5 @@ export default {
   messageCopySuccess: "复制成功",
   messageInputColGreaterTableCols: "输入的col不能大于表格的cols",
   messageInputGreater0: "输入的col需要大于0",
+  messageInputTip: "请检查输入格式及符号是否正常",
 }
