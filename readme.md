@@ -1,7 +1,5 @@
 ### json-excel-table-switcher
-
 json to table, table to json, upload excel to json
-
 json table excel 转换
 
 for example:
