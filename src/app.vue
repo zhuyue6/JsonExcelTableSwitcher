@@ -19,23 +19,43 @@
         </template>
           <el-button type="primary">{{ t('btnUploadfile') }}</el-button>
         </el-upload>
-
-        <el-select
-          v-model="state.lang"
-          :placeholder="t('selectLangTip')"
-          style="width: 240px"
-          @change="selectLang"
-          class="mb-2"
-        >
-          <el-option
-            label="English"
-            value="en"
-          />
-          <el-option
-            label="简体中文"
-            value="cn"
-          />
-        </el-select>
+        <div class="flex items-center mr-4">
+          <span  class="mr-2">{{ t('labelComplete') }}</span>
+          <el-select
+            v-model="state.completion"
+            :placeholder="t('tipComplete')"
+            style="width: 240px"
+            class="mb-2"
+          >
+            <el-option
+              :label="t('yes')"
+              :value="true"
+            />
+            <el-option
+              :label="t('no')"
+              :value="false"
+            />
+          </el-select>
+        </div>
+        <div class="flex items-center">
+          <span class="mr-2">{{ t('labelLanguage') }}</span>
+          <el-select
+            v-model="state.lang"
+            :placeholder="t('selectLangTip')"
+            style="width: 240px"
+            @change="selectLang"
+            class="mb-2"
+          >
+            <el-option
+              label="English"
+              value="en"
+            />
+            <el-option
+              label="简体中文"
+              value="cn"
+            />
+          </el-select>
+        </div>
         </div>
         <div class="flex items-center mb-6">
           <div class="flex flex-grow mr-2 items-center">
@@ -158,6 +178,7 @@
     sheets: Sheet[],
     lang: string
     elLocale: Record<string, unknown>
+    completion: boolean
   }
 
   interface Sheet {
@@ -182,7 +203,8 @@
     selectedSheet: '',
     sheets: [],
     lang: 'en',
-    elLocale: {}
+    elLocale: {},
+    completion: true
   })
   const inputRef: null | Ref<typeof ElInput> = ref(null)
 
@@ -202,7 +224,24 @@
   }
 
   function getText() {
-    const text = (new Function(`return {${state.text.replaceAll('，', ',').replaceAll('：', ':')}}`))();
+    const jsonStr = state.text.replaceAll('，', ',').replaceAll('：', ':').trim();
+    if (/^{[\s\S]*}$/.test(jsonStr) && state.completion) {
+      ElMessage({
+        message: t('messageCompleteRemove'),
+        type: 'warning',
+      })
+      return
+    }
+    
+    if (!/^{[\s\S]*}$/.test(jsonStr) && !state.completion) {
+      ElMessage({
+        message: t('messageComplete'),
+        type: 'warning',
+      })
+      return
+    }
+    const result = state.completion ? `{${jsonStr}}` : jsonStr;
+    const text = (new Function(`return ${result}`))();
     let parseText = null
     try {
       parseText = JSON.parse(JSON.stringify(text))
@@ -212,7 +251,7 @@
 
   function patchTable(text: string) {
     if (!text) {
-      return alert('请输入对象类型的字符串')
+      return
     }
 
     const list = []
@@ -241,15 +280,15 @@
 
   function tableSwitchText() {
     const jsonStr: Record<string, string> = {}
-    if (Number(state.keyCol) < 0 || Number(state.keyValue) < 0) {
+    if (Number(state.keyCol) <= 0 || Number(state.keyValue) <= 0) {
       return ElMessage({
-        message: '输入的col需要大于0',
+        message: t('messageInputGreater0'),
         type: 'warning',
       })
     }
     if (Number(state.keyCol) > state.columns.length || Number(state.keyValue) > state.columns.length) {
        return ElMessage({
-        message: '输入的col不能大于表格的cols',
+        message: t('messageInputColGreaterTableCols'),
         type: 'warning',
       })
     }
@@ -262,10 +301,10 @@
       }
     })
 
-    let str = '';
+    let str = state.completion ? '' : '{\n';
     list.forEach((item=> str += `"${item['key']}": "${item['value']}", \n` ))
 
-    state.text = str
+    state.text = state.completion ? str : str + '}';
   }
   
   function changeFile(file: UploadFile) {
@@ -355,7 +394,7 @@
     inputRef.value?.select()
     document.execCommand('copy')
     return ElMessage({
-      message: '复制成功',
+      message: t('messageCopySuccess'),
       type: 'success',
     })
   }
@@ -369,7 +408,7 @@
     selection.addRange(range);
     document.execCommand('copy')
     return ElMessage({
-      message: '复制成功',
+      message: t('messageCopySuccess'),
       type: 'success',
     })
   }
