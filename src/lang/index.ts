@@ -9,8 +9,8 @@ const messages = {
 
 const i18n = createI18n({
     legacy: true, // VUE3 组合式API
-    locale: 'cn', // 默认cn语言环境
-    fallbackLocale: 'en',  //备用语言环境
+    locale: 'en', // 默认cn语言环境
+    fallbackLocale: 'cn',  //备用语言环境
     messages
 })
 
